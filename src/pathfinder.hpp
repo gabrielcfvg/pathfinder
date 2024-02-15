@@ -3,7 +3,6 @@
 // builtin
 #include <vector>
 #include <optional>
-#include <cassert>
 #include <unordered_set>
 #include <array>
 #include <functional>
@@ -22,7 +21,7 @@ struct std::hash<IdxVec2> {
 
 using Path = std::vector<IdxVec2>;
 
-bool is_path_valid(Path const& path) {
+inline bool is_path_valid(Path const& path) {
 
     for (size_t i = 0; i < path.size() - 1; i++) {
         auto const& current = path[i];
@@ -49,7 +48,7 @@ bool is_path_valid(Path const& path) {
     return true;
 }
 
-consteval std::array<IdxVec2, 8> potential_neighbours_offsets() {
+inline consteval std::array<IdxVec2, 8> potential_neighbours_offsets() {
 
     size_t idx = 0;
     std::array<IdxVec2, 8> offsets;
@@ -73,7 +72,7 @@ struct Neighbour {
     int32_t cost{};
 };
 
-std::vector<Neighbour> get_tile_neighbours(IdxVec2 tile, std::function<bool(IdxVec2)> is_tile_inside_limits) {
+inline std::vector<Neighbour> get_tile_neighbours(IdxVec2 tile, std::function<bool(IdxVec2)> is_tile_inside_limits) {
 
     static constinit auto const offsets = potential_neighbours_offsets();
 

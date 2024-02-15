@@ -36,6 +36,7 @@ def __get_cmake_command(config: ProjectConfig) -> str:
 
 def build(config: ProjectConfig, target: str, build_type: str):
 
+    print(target)
     assert target in config.targets
     assert build_type in config.build_types
 

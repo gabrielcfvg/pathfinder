@@ -2,6 +2,7 @@
 #include "pathfinder.hpp"
 
 // builtin
+#include <cassert>
 #include <queue>
 #include <vector>
 #include <unordered_map>
@@ -72,7 +73,7 @@ std::optional<Path> djikstra(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxV
             if (!is_tile_walkable(neighbour.tile))
                 continue;
 
-            auto const new_dist = current_dist + 1;
+            auto const new_dist = current_dist + neighbour.cost;
             if (new_dist < get_dist(neighbour.tile)) {
                 set_dist(neighbour.tile, new_dist);
                 pq.push({new_dist, neighbour.tile});

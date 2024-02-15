@@ -84,7 +84,7 @@ def build_parser(config: ProjectConfig) -> argparse.ArgumentParser:
     build_command.add_argument(
         "-t", "--target",
         dest="target",
-        default=config.main_target,
+        default=[config.main_target],
         nargs="+",
         choices=config.targets.keys(),
         help=f"the targets to be built, default: {config.main_target}"

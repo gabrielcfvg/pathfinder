@@ -6,6 +6,7 @@
 
 // local
 #include "map.hpp"
+#include "pathfinder.hpp"
 
 
 
@@ -49,6 +50,8 @@ bool validate_point(Map const& map, IdxVec2 const& point) {
 
 int main() {
 
+    /* ---------------------------------- setup --------------------------------- */
+    
     std::cout << "loading map from file 'map.txt'" << std::endl;
     auto map = Map::from_file("map.txt");
     display_map(map);
@@ -82,4 +85,55 @@ int main() {
     std::cout << std::endl;
     display_map(map, std::make_pair(origin, destination));
     std::cout << std::endl;
+
+    size_t run_count;
+    std::cout << "Enter the number of times to run the pathfinding algorithms: ";
+    std::cin >> run_count;
+    std::cout << std::endl;
+
+
+    /* ------------------------------- benchmarks ------------------------------- */
+
+    std::cout << "------------------------ benchmarks ------------------------" << std::endl;
+
+    std::vector<std::pair<std::string, std::function<std::optional<Path>(IdxVec2, IdxVec2, std::function<bool(IdxVec2)>, std::function<bool(IdxVec2)>)>>> pathfinders = {
+        {"A*", a_star},
+        {"Djikstra", djikstra}
+    };
+
+    for (auto const pathfinder: pathfinders) {
+
+        std::cout << "benchmarking " << pathfinder.first << " algorithm" << std::endl;
+
+        uint64_t total_time_us = 0;
+        std::optional<Path> path = std::nullopt;
+
+        for (size_t i = 0; i < run_count; i++) {
+            
+            auto start = std::chrono::high_resolution_clock::now();
+            auto result_path = pathfinder.second(origin, destination, [&map](IdxVec2 point) { return map.is_walkable(point); }, [&map](IdxVec2 point) { return map.has_tile(point); });
+            auto end = std::chrono::high_resolution_clock::now();
+            
+            if (path.has_value()) {
+                if (path.value() != result_path)
+                    std::cout << pathfinder.first << " path mismatch" << std::endl;
+            }
+            else
+                path = result_path;
+
+            total_time_us += std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        }
+
+        if (path.has_value()) {
+
+            std::cout << "path found: ";
+            for (auto const& point: path.value())
+                std::cout << "(" << point.x << ", " << point.y << ") ";
+            std::cout << std::endl;
+        }
+
+        std::cout << "average time: " << total_time_us / run_count << " us" << std::endl;
+
+        std::cout << std::endl;
+    }
 }

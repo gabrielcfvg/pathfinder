@@ -126,9 +126,14 @@ int main() {
 
         if (path.has_value()) {
 
+            assert(is_path_valid(path.value()) && "invalid path");
             std::cout << "path found: ";
             for (auto const& point: path.value())
                 std::cout << "(" << point.x << ", " << point.y << ") ";
+            std::cout << std::endl;
+
+            display_map(map, std::make_pair(origin, destination), path.value());
+
             std::cout << std::endl;
         }
 

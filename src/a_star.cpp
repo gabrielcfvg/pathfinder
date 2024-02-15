@@ -26,6 +26,12 @@ std::optional<Path> a_star(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec
         Node(int32_t _g, std::optional<IdxVec2> _parent, IdxVec2 position, IdxVec2 dest)
         : parent(_parent), visited{false}, g{_g}, h(manhattan_distance(position, dest)) {}
 
+        Node() = delete;
+        Node(Node const&) = delete;
+        Node(Node&&) = default;
+        Node& operator=(Node const&) = delete;
+        Node& operator=(Node&&) = delete;
+
         int32_t f() const {
             return g + h;
         }
@@ -39,7 +45,7 @@ std::optional<Path> a_star(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec
         auto current = dest;
         while (current != orig) {
             path.push_back(current);
-            current = nodes[current].parent.value();
+            current = nodes.at(current).parent.value();
         }
 
         std::reverse(path.begin(), path.end());
@@ -47,7 +53,7 @@ std::optional<Path> a_star(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec
     };
 
     auto const is_tile_walkable_and_inside_limits = [&](IdxVec2 tile) {
-        return is_tile_walkable(tile) && is_tile_inside_limits(tile);
+        return is_tile_inside_limits(tile) && is_tile_walkable(tile);
     };
 
     auto already_has_been_visited = [&](IdxVec2 tile) {
@@ -59,7 +65,7 @@ std::optional<Path> a_star(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec
 
     // the priority queue is a max heap, so we need to define a custom comparison function
     auto const node_cmp = [&](IdxVec2 lhs, IdxVec2 rhs) {
-        return nodes[lhs].f() > nodes[rhs].f();
+        return nodes.at(lhs).f() > nodes.at(rhs).f();
     };
 
     std::priority_queue<IdxVec2, std::vector<IdxVec2>, decltype(node_cmp)> pq{node_cmp};
@@ -67,15 +73,16 @@ std::optional<Path> a_star(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec
     auto const push_node = [&](IdxVec2 position, Node node) {
         
         assert(nodes.find(position) == nodes.end() && "node already exists");
-        nodes.insert({position, node});
+        nodes.insert({position, std::move(node)});
         pq.push(position);
     };
 
     std::optional<Path> result = std::nullopt;
 
     // setup initial state
-    nodes.insert({orig, Node{0, std::nullopt, orig, dest}});
-    pq.push(orig);
+    // nodes.insert({orig, Node{0, std::nullopt, orig, dest}});
+    // pq.push(orig);
+    push_node(orig, Node{0, std::nullopt, orig, dest});
 
     while (!result.has_value() && !pq.empty()) {
         
@@ -90,7 +97,7 @@ std::optional<Path> a_star(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec
         }
 
         // mark the current tile as visited
-        nodes[current_tile].visited = true;
+        nodes.at(current_tile).visited = true;
 
         // generate successors
         for (auto const neighbour: get_tile_neighbours(current_tile, is_tile_walkable_and_inside_limits)) {
@@ -99,11 +106,12 @@ std::optional<Path> a_star(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec
             if (already_has_been_visited(neighbour.tile))
                 continue;
 
-            auto const new_g = nodes[current_tile].g + neighbour.cost;
+            auto const new_g = nodes.at(current_tile).g + neighbour.cost;
             auto it = nodes.find(neighbour.tile);
             if (it == nodes.end()) { // if the neighbour is not in the open list, insert it
-                nodes.insert({neighbour.tile, Node{new_g, current_tile, neighbour.tile, dest}});
-                pq.push(neighbour.tile);
+                // nodes.insert({neighbour.tile, Node{new_g, current_tile, neighbour.tile, dest}});
+                // pq.push(neighbour.tile);
+                push_node(neighbour.tile, Node{new_g, current_tile, neighbour.tile, dest});
             }
             else if (new_g < it->second.g) { // if the neighbour is in the open list and the new g is lower, update it
                 it->second.g = new_g;

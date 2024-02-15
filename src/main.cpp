@@ -97,7 +97,8 @@ int main() {
     std::cout << "------------------------ benchmarks ------------------------" << std::endl;
 
     std::vector<std::pair<std::string, std::function<std::optional<Path>(IdxVec2, IdxVec2, std::function<bool(IdxVec2)>, std::function<bool(IdxVec2)>)>>> pathfinders = {
-        {"A*", a_star},
+        {"A* Manhattan", a_star_manhattan},
+        {"A* Euclides", a_star_euclidean},
         {"Djikstra", djikstra}
     };
 

@@ -14,7 +14,14 @@ int32_t manhattan_distance(IdxVec2 lhs, IdxVec2 rhs) {
     return std::abs(lhs.x - rhs.x) + std::abs(lhs.y - rhs.y);
 }
 
-std::optional<Path> a_star(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec2)> is_tile_walkable, std::function<bool(IdxVec2)> is_tile_inside_limits) {
+int32_t euclidean_distance(IdxVec2 lhs, IdxVec2 rhs) {
+    // squared
+    auto const dx = lhs.x - rhs.x;
+    auto const dy = lhs.y - rhs.y;
+    return dx * dx + dy * dy;
+}
+
+std::optional<Path> a_star(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec2)> is_tile_walkable, std::function<bool(IdxVec2)> is_tile_inside_limits, std::function<int32_t(IdxVec2, IdxVec2)> heuristics) {
 
     struct Node {
 
@@ -23,8 +30,8 @@ std::optional<Path> a_star(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec
         int32_t g;
         int32_t const h;
 
-        Node(int32_t _g, std::optional<IdxVec2> _parent, IdxVec2 position, IdxVec2 dest)
-        : parent(_parent), visited{false}, g{_g}, h(manhattan_distance(position, dest)) {}
+        Node(int32_t _g, std::optional<IdxVec2> _parent, IdxVec2 position, IdxVec2 dest, std::function<int32_t(IdxVec2, IdxVec2)> heuristics)
+        : parent(_parent), visited{false}, g{_g}, h(heuristics(position, dest)) {}
 
         Node() = delete;
         Node(Node const&) = delete;
@@ -82,7 +89,7 @@ std::optional<Path> a_star(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec
     // setup initial state
     // nodes.insert({orig, Node{0, std::nullopt, orig, dest}});
     // pq.push(orig);
-    push_node(orig, Node{0, std::nullopt, orig, dest});
+    push_node(orig, Node{0, std::nullopt, orig, dest, heuristics});
 
     while (!result.has_value() && !pq.empty()) {
         
@@ -111,7 +118,7 @@ std::optional<Path> a_star(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec
             if (it == nodes.end()) { // if the neighbour is not in the open list, insert it
                 // nodes.insert({neighbour.tile, Node{new_g, current_tile, neighbour.tile, dest}});
                 // pq.push(neighbour.tile);
-                push_node(neighbour.tile, Node{new_g, current_tile, neighbour.tile, dest});
+                push_node(neighbour.tile, Node{new_g, current_tile, neighbour.tile, dest, heuristics});
             }
             else if (new_g < it->second.g) { // if the neighbour is in the open list and the new g is lower, update it
                 it->second.g = new_g;
@@ -121,4 +128,12 @@ std::optional<Path> a_star(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec
     }
 
     return result;
+}
+
+
+std::optional<Path> a_star_manhattan(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec2)> is_tile_walkable, std::function<bool(IdxVec2)> is_tile_inside_limits) {
+    return a_star(orig, dest, is_tile_walkable, is_tile_inside_limits, manhattan_distance);
+}
+std::optional<Path> a_star_euclidean(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec2)> is_tile_walkable, std::function<bool(IdxVec2)> is_tile_inside_limits) {
+    return a_star(orig, dest, is_tile_walkable, is_tile_inside_limits, euclidean_distance);
 }

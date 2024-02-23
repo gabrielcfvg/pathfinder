@@ -95,5 +95,6 @@ inline std::vector<Neighbour> get_tile_neighbours(IdxVec2 tile, std::function<bo
 }
 
 
-std::optional<Path> a_star(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec2)> is_tile_walkable, std::function<bool(IdxVec2)> is_tile_inside_limits);
+std::optional<Path> a_star_manhattan(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec2)> is_tile_walkable, std::function<bool(IdxVec2)> is_tile_inside_limits);
+std::optional<Path> a_star_euclidean(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec2)> is_tile_walkable, std::function<bool(IdxVec2)> is_tile_inside_limits);
 std::optional<Path> djikstra(IdxVec2 orig, IdxVec2 dest, std::function<bool(IdxVec2)> is_tile_walkable, std::function<bool(IdxVec2)> is_tile_inside_limits);
